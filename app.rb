@@ -1494,7 +1494,13 @@ end
 # The general forumla is RANK = SCORE / (AGE ^ AGING_FACTOR)
 def compute_news_rank(news)
     age = (Time.now.to_i - news["ctime"].to_i)
-    rank = ((news["score"].to_f)*1000000)/((age+NewsAgePadding)**RankAgingFactor)
+    ## Here's where we can fudge the ranking in Gary's favor a little bit
+    if news['username'] == 'sbauch'
+      rank = ((news["score"].to_f)*100000000)/((age+NewsAgePadding)**RankAgingFactor)
+    else  
+      rank = ((news["score"].to_f)*1000000)/((age+NewsAgePadding)**RankAgingFactor)
+    end
+    
     rank = -age if (age > TopNewsAgeLimit)
     return rank
 end
