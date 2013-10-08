@@ -47,6 +47,7 @@ function submit() {
         news_id: $("input[name=news_id]").val(),
         title: $("input[name=title]").val(),
         url: $("input[name=url]").val(),
+        image: $("input[name=image]").val(),
         text: $("textarea[name=text]").val(),
         apisecret: apisecret
     };

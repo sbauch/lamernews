@@ -45,7 +45,7 @@ Version = "0.11.0"
 
 def setup_redis(uri=RedisURL)
     uri = URI.parse(uri)
-    $r = Redis.new(:host => uri.host, :port => uri.port, :password => '8DPofDKbDbIo9GEu') unless $r
+    $r = Redis.new(:host => uri.host, :port => uri.port) unless $r
 end
 
 before do
@@ -222,8 +222,9 @@ get '/login' do
                 H.inputtext(:id => "username", :name => "username")+
                 H.label(:for => "password") {"password"}+
                 H.inputpass(:id => "password", :name => "password")+H.br+
-                H.checkbox(:name => "register", :value => "1")+
-                "create account"+H.br+
+                H.checkbox(:id => "register", :name => "register", :value => "1")+
+                H.label(:for => "register") {"create account"}+
+                H.br+
                 H.submit(:name => "do_login", :value => "Login")
             }
         }+
@@ -313,14 +314,20 @@ get '/submit' do
         H.div(:id => "submitform") {
             H.form(:name=>"f") {
                 H.inputhidden(:name => "news_id", :value => -1)+
-                H.label(:for => "title") {"title"}+
-                H.inputtext(:id => "title", :name => "title", :size => 80, :value => (params[:t] ? H.entities(params[:t]) : ""))+H.br+
-                H.label(:for => "url") {"url"}+H.br+
-                H.inputtext(:id => "url", :name => "url", :size => 60, :value => (params[:u] ? H.entities(params[:u]) : ""))+H.br+
-                "or if you don't have an url type some text"+
+                H.label(:for => "title") {"Title:"}+
                 H.br+
-                H.label(:for => "text") {"text"}+
+                H.inputtext(:id => "title", :name => "title", :size => 80, :value => (params[:t] ? H.entities(params[:t]) : ""))+H.br+
+                H.br+
+                H.label(:for => "url") {"Url:"}+H.br+
+                H.inputtext(:id => "url", :name => "url", :size => 60, :value => (params[:u] ? H.entities(params[:u]) : ""))+H.br+
+                H.br+
+                H.label(:for => "image") {"Preview image:"}+H.br+
+                H.inputtext(:id => "image", :name => "image", :size => 60, :value => (params[:i] ? H.entities(params[:i]) : ""))+H.br+
+                H.br+
+                H.label(:for => "text") {"Or, enter a description:"}+
+                H.br+
                 H.textarea(:id => "text", :name => "text", :cols => 60, :rows => 10) {}+
+                H.br+
                 H.button(:name => "do_submit", :value => "Submit")
             }
         }+
@@ -492,20 +499,22 @@ get "/editnews/:news_id" do
         H.div(:id => "submitform") {
             H.form(:name=>"f") {
                 H.inputhidden(:name => "news_id", :value => news['id'])+
-                H.label(:for => "title") {"title"}+
-                H.inputtext(:id => "title", :name => "title", :size => 80,
-                            :value => news['title'])+H.br+
-                H.label(:for => "url") {"url"}+H.br+
-                H.inputtext(:id => "url", :name => "url", :size => 60,
-                            :value => H.entities(news['url']))+H.br+
-                "or if you don't have an url type some text"+
+                H.label(:for => "title") {"Title:"}+
                 H.br+
-                H.label(:for => "text") {"text"}+
-                H.textarea(:id => "text", :name => "text", :cols => 60, :rows => 10) {
-                    H.entities(text)
-                }+H.br+
-                H.checkbox(:name => "del", :value => "1")+
-                "delete this news"+H.br+
+                H.inputtext(:id => "title", :name => "title", :size => 80, :value => news['title'])+H.br+
+                H.br+
+                H.label(:for => "url") {"Url:"}+H.br+
+                H.inputtext(:id => "url", :name => "url", :size => 60, :value => H.entities(news['url']))+H.br+
+                H.br+
+                H.label(:for => "image") {"Preview image:"}+H.br+
+                H.inputtext(:id => "image", :name => "image", :size => 60, :value => news['image'])+H.br+
+                H.br+
+                H.label(:for => "text") {"Or, enter a description:"}+
+                H.br+
+                H.textarea(:id => "text", :name => "text", :cols => 60, :rows => 10) {H.entities(text)}+
+                H.br+
+                H.checkbox(:name => "del", :value => "1")+ "delete this news"+
+                H.br+
                 H.button(:name => "edit_news", :value => "Edit")
             }
         }+
@@ -792,11 +801,9 @@ post '/api/submit' do
                 "please wait #{allowed_to_post_in_seconds} seconds."
             }.to_json
         end
-        news_id = insert_news(params[:title],params[:url],params[:text],
-                              $user["id"])
+        news_id = insert_news(params[:title],params[:url],params[:text],params[:image],$user["id"])
     else
-        news_id = edit_news(params[:news_id],params[:title],params[:url],
-                            params[:text],$user["id"])
+        news_id = edit_news(params[:news_id],params[:title],params[:url],params[:text],params[:image],$user["id"])
         if !news_id
             return {
                 :status => "err",
@@ -1513,7 +1520,7 @@ end
 #
 # Return value: the ID of the inserted news, or the ID of the news with
 # the same URL recently added.
-def insert_news(title,url,text,user_id)
+def insert_news(title,url,text,image,user_id)
     # If we don't have an url but a comment, we turn the url into
     # text://....first comment..., so it is just a special case of
     # title+url anyway.
@@ -1532,6 +1539,7 @@ def insert_news(title,url,text,user_id)
         "id", news_id,
         "title", title,
         "url", url,
+        "image", image,
         "user_id", user_id,
         "ctime", ctime,
         "score", 0,
@@ -1560,7 +1568,7 @@ end
 # On success but when a news deletion is performed (empty title) -1 is returned.
 # On failure (for instance news_id does not exist or does not match
 #             the specified user_id) false is returned.
-def edit_news(news_id,title,url,text,user_id)
+def edit_news(news_id,title,url,text,image,user_id)
     news = get_news_by_id(news_id)
     return false if !news or news['user_id'].to_i != user_id.to_i and !user_is_admin?($user)
     return false if !(news['ctime'].to_i > (Time.now.to_i - NewsEditTime)) and !user_is_admin?($user)
@@ -1582,10 +1590,13 @@ def edit_news(news_id,title,url,text,user_id)
         $r.del("url:"+news['url'])
         $r.setex("url:"+url,PreventRepostTime,news_id) if !textpost
     end
+
     # Edit the news fields.
     $r.hmset("news:#{news_id}",
         "title", title,
-        "url", url)
+        "url", url,
+        "image", image
+        )
     return news_id
 end
 
@@ -1668,17 +1679,20 @@ def news_to_html(news)
         upclass << " disabled"
     end
     H.article("data-news-id" => news["id"]) {
+        H.div(:class => :image) {
+            H.img(:src=>news['image'])
+        } + 
         H.a(:href => "#up", :class => upclass) {
             "&#9650;"
         }+" "+
-        H.h2 {
+        H.h3 {
             H.a(:href=>news["url"], :rel => "nofollow") {
                 H.entities news["title"]
             }
         }+" "+
         H.address {
             if domain
-                "at "+H.entities(domain)
+                "("+H.entities(domain)+")"
             else "" end +
             if ($user and $user['id'].to_i == news['user_id'].to_i and
                 news['ctime'].to_i > (Time.now.to_i - NewsEditTime))
@@ -1691,8 +1705,9 @@ def news_to_html(news)
             "&#9660;"
         }+
         H.p {
-            H.span(:class => :upvotes) { news["up"] } + " up and " +
-            H.span(:class => :downvotes) { news["down"] } + " down, posted by " +            
+            #H.span(:class => :upvotes) { news["up"] } + " up and " +
+            #H.span(:class => :downvotes) { news["down"] } + " down, posted by " +            
+            H.span(:class => :upvotes) { news['score'] } + " points by " + 
             H.username {
                 H.a(:href=>"/user/"+URI.encode(news["username"])) {
                     H.entities news["username"]
