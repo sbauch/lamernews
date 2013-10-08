@@ -76,8 +76,16 @@ end
 get '/' do
     H.set_title "#{SiteName} - #{SiteDescription}"
     news,numitems = get_top_news
+    featured,num_featured = get_featured_news
+
+    news = news - featured
     H.page {
-        H.h2 {"Top news"}+news_list_to_html(news)
+        H.div(:class => "featured") {
+            news_list_to_html featured
+        } +
+        H.div(:class => "list") {
+            news_list_to_html news
+        }
     }
 end
 
@@ -1524,11 +1532,11 @@ end
 def compute_news_rank(news)
     age = (Time.now.to_i - news["ctime"].to_i)
     ## Here's where we can fudge the ranking in Gary's favor a little bit
-    if news['username'] == 'sbauch'
-      rank = ((news["score"].to_f)*100000000)/((age+NewsAgePadding)**RankAgingFactor)
-    else  
+    # if news['username'] == 'sbauch'
+    #   rank = ((news["score"].to_f)*100000000)/((age+NewsAgePadding)**RankAgingFactor)
+    # else  
       rank = ((news["score"].to_f)*1000000)/((age+NewsAgePadding)**RankAgingFactor)
-    end
+    # end
     
     rank = -age if (age > TopNewsAgeLimit)
     return rank
@@ -1560,6 +1568,11 @@ def insert_news(title,url,text,image,user_id, featured, promoted)
     else
         is_admin = false
     end
+
+    is_promoted = promoted.nil? || !is_admin ? 0 : 1
+    is_featured = featured.nil? || !is_admin ? 0 : 1
+
+    rank = 0 #is_featured ? 1000 : 0
     
     # We can finally insert the news.
     ctime = Time.new.to_i
@@ -1572,12 +1585,12 @@ def insert_news(title,url,text,image,user_id, featured, promoted)
         "user_id", user_id,
         "ctime", ctime,
         "score", 0,
-        "rank", 0,
+        "rank", rank,
         "up", 0,
         "down", 0,
         "comments", 0,
-        "featured", featured.nil? || !is_admin ? 0 : 1, #will feature this post on the top of the list
-        "promoted", promoted.nil? || !is_admin ? 0 : 1 #promoted post for advertising reasons
+        "featured", is_featured, #will feature this post on the top of the list
+        "promoted", is_promoted #promoted post for advertising reasons
     )
     # The posting user virtually upvoted the news posting it
     rank,error = vote_news(news_id,user_id,:up)
@@ -1585,12 +1598,16 @@ def insert_news(title,url,text,image,user_id, featured, promoted)
     $r.zadd("user.posted:#{user_id}",ctime,news_id)
     # Add the news into the chronological view
     $r.zadd("news.cron",ctime,news_id)
-    # Add the news into the top view
-    $r.zadd("news.top",rank,news_id)
+    # Add to top news
+    $r.zadd "news.top", rank, news_id
     # Add the news url for some time to avoid reposts in short time
     $r.setex("url:"+url,PreventRepostTime,news_id) if !textpost
     # Set a timeout indicating when the user may post again
     $r.setex("user:#{$user['id']}:submitted_recently",NewsSubmissionBreak,'1')
+    
+    # stash this as a featured post
+    $r.zadd "news.featured", rank, news_id if is_featured
+        
     return news_id
 end
 
@@ -1629,9 +1646,10 @@ def edit_news(news_id,title,url,text,image,user_id, featured, promoted)
         is_admin = false
     end
 
+    is_featured = is_admin ? (featured.nil? || featured == "0" ? 0 : 1) : news['featured']
+    is_promoted = is_admin ? (promoted.nil? || promoted == "0" ? 0 : 1) : news['promoted'] 
 
-    is_featured = is_admin ? (featured.nil? || featured == 0 ? 0 : 1) : news['featured']
-    is_promoted = is_admin ? (promoted.nil? || promoted == 0 ? 0 : 1) : news['promoted'] 
+    rank = news['rank']
 
     # Edit the news fields.
     $r.hmset("news:#{news_id}",
@@ -1641,6 +1659,14 @@ def edit_news(news_id,title,url,text,image,user_id, featured, promoted)
         "featured", is_featured,
         "promoted", is_promoted
         )
+    
+    # stash this as a featured post
+    if is_featured == 1
+        $r.zadd "news.featured", rank, news_id
+    else
+        $r.zrem("news.featured",news_id)
+    end
+        
     return news_id
 end
 
@@ -1653,6 +1679,7 @@ def del_news(news_id,user_id)
     $r.hmset("news:#{news_id}","del",1)
     $r.zrem("news.top",news_id)
     $r.zrem("news.cron",news_id)
+    $r.zrem("news.featured",news_id)
     return true
 end
 
@@ -1710,6 +1737,7 @@ def news_to_html(news)
     return H.article(:class => "deleted") {
         "[deleted news]"
     } if news["del"]
+
     domain = news_domain(news)
     news = {}.merge(news) # Copy the object so we can modify it as we wish.
     news["url"] = "/news/#{news["id"]}" if !domain
@@ -1722,7 +1750,7 @@ def news_to_html(news)
         downclass << " voted"
         upclass << " disabled"
     end
-    H.article("data-news-id" => news["id"]) {
+    H.article("data-news-id" => news["id"], :class => news['promoted'] == "1" ? "promoted" : "" ) {
         H.div(:class => :image) {
             H.img(:src=>news['image'])
         } + 
@@ -1751,7 +1779,7 @@ def news_to_html(news)
         H.p {
             #H.span(:class => :upvotes) { news["up"] } + " up and " +
             #H.span(:class => :downvotes) { news["down"] } + " down, posted by " +            
-            H.span(:class => :upvotes) { news['score'] } + " points by " + 
+            H.span(:class => :upvotes) { news['score'] } + " point" + (news['score'] == "1" ? "" : "s") + " by " + 
             H.username {
                 H.a(:href=>"/user/"+URI.encode(news["username"])) {
                     H.entities news["username"]
@@ -1857,6 +1885,15 @@ def get_posted_news(user_id,start,count)
     numitems = $r.zcard("user.posted:#{user_id}").to_i
     news_ids = $r.zrevrange("user.posted:#{user_id}",start,start+(count-1))
     return get_news_by_id(news_ids),numitems
+end
+
+# Gets all featured news by rank
+def get_featured_news(start=0, count=TopNewsPerPage)
+    numitems = $r.zcard "news.featured"
+    news_ids = $r.zrevrange "news.featured",start,start+(count-1)
+    result = get_news_by_id(news_ids,:update_rank => true)
+    # Sort by rank before returning, since we adjusted ranks during iteration.
+    return result.sort{|a,b| b["rank"].to_f <=> a["rank"].to_f},numitems
 end
 
 ###############################################################################
