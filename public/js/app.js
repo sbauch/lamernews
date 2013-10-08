@@ -49,6 +49,8 @@ function submit() {
         url: $("input[name=url]").val(),
         image: $("input[name=image]").val(),
         text: $("textarea[name=text]").val(),
+        featured: $("input[name=featured]").length && $("input[name=featured]").attr("checked"),
+        promoted: $("input[name=promoted]").length && $("input[name=promoted]").attr("checked"),
         apisecret: apisecret
     };
     var del = $("input[name=del]").length && $("input[name=del]").attr("checked");

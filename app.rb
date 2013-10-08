@@ -220,8 +220,10 @@ get '/login' do
             H.form(:name=>"f") {
                 H.label(:for => "username") {"username"}+
                 H.inputtext(:id => "username", :name => "username")+
+                H.br+
                 H.label(:for => "password") {"password"}+
-                H.inputpass(:id => "password", :name => "password")+H.br+
+                H.inputpass(:id => "password", :name => "password")+
+                H.br+
                 H.checkbox(:id => "register", :name => "register", :value => "1")+
                 H.label(:for => "register") {"create account"}+
                 H.br+
@@ -328,6 +330,14 @@ get '/submit' do
                 H.br+
                 H.textarea(:id => "text", :name => "text", :cols => 60, :rows => 10) {}+
                 H.br+
+                (!user_is_admin?($user) ? H.span() : H.div(:id => "admin_only") {
+                    H.br+
+                    H.checkbox(:name => "featured", :id => "featured", :value => "1")+
+                    H.label(:for => "featured") {"Editor's pick/feature post"}+
+                    H.br+
+                    H.checkbox(:name => "promoted", :id => "promoted", :value => "1")+
+                    H.label(:for => "promoted") {"Promoted/sponsored post"}
+                })+
                 H.button(:name => "do_submit", :value => "Submit")
             }
         }+
@@ -515,6 +525,14 @@ get "/editnews/:news_id" do
                 H.br+
                 H.checkbox(:name => "del", :value => "1")+ "delete this news"+
                 H.br+
+                (!user_is_admin?($user) ? H.span() : H.div(:id => "admin_only") {
+                    H.br+
+                    H.checkbox(:name => "featured", :id => "featured", :value => "1")+
+                    H.label(:for => "featured") {"Editor's pick/feature post"}+
+                    H.br+
+                    H.checkbox(:name => "promoted", :id => "promoted", :value => "1")+
+                    H.label(:for => "promoted") {"Promoted/sponsored post"}
+                })+
                 H.button(:name => "edit_news", :value => "Edit")
             }
         }+
@@ -522,6 +540,10 @@ get "/editnews/:news_id" do
         H.script() {'
             $(function() {
                 $("input[name=edit_news]").click(submit);
+                if(' + (news['featured'] == "1").to_s + ')
+                    $("input[name=featured").prop("checked", true);
+                if(' + (news['promoted'] == "1").to_s + ')
+                    $("input[name=promoted").prop("checked", true);
             });
         '}
     }
@@ -801,9 +823,9 @@ post '/api/submit' do
                 "please wait #{allowed_to_post_in_seconds} seconds."
             }.to_json
         end
-        news_id = insert_news(params[:title],params[:url],params[:text],params[:image],$user["id"])
+        news_id = insert_news(params[:title],params[:url],params[:text],params[:image],$user["id"], params[:featured], params[:promoted])
     else
-        news_id = edit_news(params[:news_id],params[:title],params[:url],params[:text],params[:image],$user["id"])
+        news_id = edit_news(params[:news_id],params[:title],params[:url],params[:text],params[:image],$user["id"], params[:featured], params[:promoted])
         if !news_id
             return {
                 :status => "err",
@@ -1520,7 +1542,7 @@ end
 #
 # Return value: the ID of the inserted news, or the ID of the news with
 # the same URL recently added.
-def insert_news(title,url,text,image,user_id)
+def insert_news(title,url,text,image,user_id, featured, promoted)
     # If we don't have an url but a comment, we turn the url into
     # text://....first comment..., so it is just a special case of
     # title+url anyway.
@@ -1532,6 +1554,13 @@ def insert_news(title,url,text,image,user_id)
     if !textpost and (id = $r.get("url:"+url))
         return id.to_i
     end
+    
+    if $user and user_is_admin?($user)
+        is_admin = true
+    else
+        is_admin = false
+    end
+    
     # We can finally insert the news.
     ctime = Time.new.to_i
     news_id = $r.incr("news.count")
@@ -1546,7 +1575,10 @@ def insert_news(title,url,text,image,user_id)
         "rank", 0,
         "up", 0,
         "down", 0,
-        "comments", 0)
+        "comments", 0,
+        "featured", featured.nil? || !is_admin ? 0 : 1, #will feature this post on the top of the list
+        "promoted", promoted.nil? || !is_admin ? 0 : 1 #promoted post for advertising reasons
+    )
     # The posting user virtually upvoted the news posting it
     rank,error = vote_news(news_id,user_id,:up)
     # Add the news to the user submitted news
@@ -1568,7 +1600,7 @@ end
 # On success but when a news deletion is performed (empty title) -1 is returned.
 # On failure (for instance news_id does not exist or does not match
 #             the specified user_id) false is returned.
-def edit_news(news_id,title,url,text,image,user_id)
+def edit_news(news_id,title,url,text,image,user_id, featured, promoted)
     news = get_news_by_id(news_id)
     return false if !news or news['user_id'].to_i != user_id.to_i and !user_is_admin?($user)
     return false if !(news['ctime'].to_i > (Time.now.to_i - NewsEditTime)) and !user_is_admin?($user)
@@ -1591,11 +1623,23 @@ def edit_news(news_id,title,url,text,image,user_id)
         $r.setex("url:"+url,PreventRepostTime,news_id) if !textpost
     end
 
+    if $user and user_is_admin?($user)
+        is_admin = true
+    else
+        is_admin = false
+    end
+
+
+    is_featured = is_admin ? (featured.nil? || featured == 0 ? 0 : 1) : news['featured']
+    is_promoted = is_admin ? (promoted.nil? || promoted == 0 ? 0 : 1) : news['promoted'] 
+
     # Edit the news fields.
     $r.hmset("news:#{news_id}",
         "title", title,
         "url", url,
-        "image", image
+        "image", image,
+        "featured", is_featured,
+        "promoted", is_promoted
         )
     return news_id
 end
