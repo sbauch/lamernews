@@ -1606,7 +1606,7 @@ def insert_news(title,url,text,image,user_id, featured, promoted)
     $r.setex("user:#{$user['id']}:submitted_recently",NewsSubmissionBreak,'1')
     
     # stash this as a featured post
-    $r.zadd "news.featured", rank, news_id if is_featured
+    $r.zadd "news.featured", rank, news_id if is_featured == "1"
         
     return news_id
 end
