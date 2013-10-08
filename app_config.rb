@@ -4,8 +4,8 @@ SiteUrl = "http://lamernews.com"
 SiteDescription = "Programming News"
 
 # Redis config
-#RedisURL = "redis://pub-redis-19203.us-east-1-2.1.ec2.garantiadata.com:19203"
-RedisURL = "redis://localhost:6379"
+RedisURL = "redis://pub-redis-19203.us-east-1-2.1.ec2.garantiadata.com:19203"
+#RedisURL = "redis://localhost:6379"
 
 # Security
 PBKDF2Iterations = 1000 # Set this to 5000 to improve security. But it is slow.
