@@ -110,6 +110,11 @@ nav a {
     margin-bottom: 5px;
 }
 
+#login input[type=text],#login input[type=password] { 
+    width: 90%;
+    max-width: 400px;
+}
+
 #submitform input[type=text],
 #submitform textarea { width: 450px; }
 
@@ -177,9 +182,14 @@ article h3 a {
     font-weight: 700; 
 }
 
+article .vote {
+    float: left;
+    width: 20px;
+}
 article .uparrow, article .downarrow {
     font-size: 16px;
     cursor: pointer;
+    display: block;
 }
 
 article .uparrow {
@@ -439,7 +449,7 @@ topcomment {
 }
 
 #link-menu-mobile {
-    color: #aaa;
+    color: #fff;
     position: absolute;
     top: 20px;
     right: 10px;
@@ -468,7 +478,30 @@ topcomment {
     }
 
     #link-menu-mobile{
-        display:block;
+        display:block; 
+    }
+
+    #content {
+        width: 320px;
+        margin-left: 60px;
+    }
+
+    article h3 {
+        display: block;
+    }
+    address {
+        display: block;
+    }
+    article p {
+        margin-left: 0;
+    }
+
+    #newslist form {
+        margin-left: -50px;
+    }
+
+    #commentform textarea {
+        width: 90%;
     }
 
 }

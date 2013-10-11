@@ -227,9 +227,11 @@ get '/login' do
         H.div(:id => "login") {
             H.form(:name=>"f") {
                 H.label(:for => "username") {"username"}+
+                H.br+
                 H.inputtext(:id => "username", :name => "username")+
                 H.br+
                 H.label(:for => "password") {"password"}+
+                H.br+
                 H.inputpass(:id => "password", :name => "password")+
                 H.br+
                 H.checkbox(:id => "register", :name => "register", :value => "1")+
@@ -258,8 +260,11 @@ get '/reset-password' do
         H.div(:id => "login") {
             H.form(:name=>"f") {
                 H.label(:for => "username") {"username"}+
+                H.br+
                 H.inputtext(:id => "username", :name => "username")+
+                H.br+
                 H.label(:for => "password") {"email"}+
+                H.br+
                 H.inputtext(:id => "email", :name => "email")+H.br+
                 H.submit(:name => "do_reset", :value => "Reset password")
             }
@@ -396,7 +401,7 @@ get "/news/:news_id" do
             news_to_html(news)
         }+top_comment+
         if $user and !news["del"]
-            H.form(:name=>"f") {
+            H.form(:name=>"f", :id => :commentform) {
                 H.inputhidden(:name => "news_id", :value => news["id"])+
                 H.inputhidden(:name => "comment_id", :value => -1)+
                 H.inputhidden(:name => "parent_id", :value => -1)+
@@ -1754,9 +1759,14 @@ def news_to_html(news)
         H.div(:class => :image) {
             H.img(:src=>news['image'])
         } + 
-        H.a(:href => "#up", :class => upclass) {
-            "&#9650;"
-        }+" "+
+        H.div(:class => :vote) {
+            H.a(:href => "#up", :class => upclass) {
+                "&#9650;"    
+            }+
+            H.a(:href => "#down", :class =>  downclass) {
+                "&#9660;"
+            }
+        }+
         H.h3 {
             H.a(:href=>news["url"], :rel => "nofollow") {
                 H.entities news["title"]
@@ -1772,9 +1782,6 @@ def news_to_html(news)
                     "[edit]"
                 }
             else "" end
-        }+
-        H.a(:href => "#down", :class =>  downclass) {
-            "&#9660;"
         }+
         H.p {
             #H.span(:class => :upvotes) { news["up"] } + " up and " +
