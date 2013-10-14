@@ -47,7 +47,7 @@ Version = "1.0"
 
 def setup_redis(uri=RedisURL)
     uri = URI.parse(uri)
-    $r = Redis.new(:host => uri.host, :port => uri.port, :password => '8DPofDKbDbIo9GEu') unless $r
+    $r = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password) unless $r
 end
 
 before do
