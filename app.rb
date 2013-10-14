@@ -577,7 +577,7 @@ get "/user/:username" do
                 digest = Digest::MD5.hexdigest(email)
                 H.img(:src=>"http://gravatar.com/avatar/#{digest}?s=48&d=mm")
             }+" "+
-            H.h2(:class => "profile-username")  {H.entities user['username']}+
+            H.h2 {H.entities user['username']}+
             H.pre {
                 H.entities user['about']
             }+
