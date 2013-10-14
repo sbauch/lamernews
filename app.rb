@@ -2033,16 +2033,37 @@ def comment_to_html(c,u,show_parent = false)
     comment_id = "#{news_id}-#{c['id']}"
     H.article(:class => "comment", :style => indent,
               "data-comment-id" => comment_id, :id => comment_id) {
-        H.span(:class => "avatar") {
+        H.div(:class => "avatar") {
             email = u["email"] || ""
             digest = Digest::MD5.hexdigest(email)
             H.img(:src=>"http://gravatar.com/avatar/#{digest}?s=48&d=mm")
-        }+H.span(:class => "info") {
+        }+
+        if !c['topcomment']
+                upclass = "uparrow"
+                downclass = "downarrow"
+                if $user and c['up'] and c['up'].index($user['id'].to_i)
+                    upclass << " voted"
+                    downclass << " disabled"
+                elsif $user and c['down'] and c['down'].index($user['id'].to_i)
+                    downclass << " voted"
+                    upclass << " disabled"
+                end
+                H.div(:class => :vote) {
+                    H.a(:href => "#up", :class => upclass) {
+                        "&#9650;"    
+                    }+
+                    H.a(:href => "#down", :class =>  downclass) {
+                        "&#9660;"
+                    }
+                }
+            else " " end +
+        H.span(:class => "info") {
+            "#{score} point"+"#{'s' if score.to_i.abs>1} by "+
             H.span(:class => "username") {
                 H.a(:href=>"/user/"+URI.encode(u["username"])) {
                     H.entities u["username"]
                 }
-            }+" "+str_elapsed(c["ctime"].to_i)+". "+
+            }+" "+str_elapsed(c["ctime"].to_i)+" |"+
             if !c['topcomment']
                 H.a(:href=>"/comment/#{news_id}/#{c["id"]}", :class=>"reply") {
                     "link"
@@ -2058,24 +2079,6 @@ def comment_to_html(c,u,show_parent = false)
                     "reply"
                 }+" "
             else " " end +
-            if !c['topcomment']
-                upclass = "uparrow"
-                downclass = "downarrow"
-                if $user and c['up'] and c['up'].index($user['id'].to_i)
-                    upclass << " voted"
-                    downclass << " disabled"
-                elsif $user and c['down'] and c['down'].index($user['id'].to_i)
-                    downclass << " voted"
-                    upclass << " disabled"
-                end
-                "#{score} point"+"#{'s' if score.to_i.abs>1}"+" "+
-                H.a(:href => "#up", :class => upclass) {
-                    "&#9650;"
-                }+" "+
-                H.a(:href => "#down", :class => downclass) {
-                    "&#9660;"
-                }
-            else " " end +
             if show_edit_link
                 H.a(:href=> "/editcomment/#{news_id}/#{c["id"]}",
                     :class =>"reply") {"edit"}+
@@ -2083,7 +2086,8 @@ def comment_to_html(c,u,show_parent = false)
                         (CommentEditTime - (Time.now.to_i-c['ctime'].to_i))/60
                     } minutes left)"
             else "" end
-        }+H.pre {
+        }+
+        H.pre {
             urls_to_links H.entities(c["body"].strip)
         }
     }
