@@ -4,8 +4,8 @@ SiteUrl = "http://gv-news.herokuapp.com"
 SiteDescription = "Marketing News"
 
 # Redis config
-RedisURL =  ENV['REDIS_DB'] ||"redis://localhost:6379"
-
+RedisURL =  'redis://pub-redis-19203.us-east-1-2.1.ec2.garantiadata.com:19203' #||"redis://localhost:6379"
+RedisPass = '8DPofDKbDbIo9GEu'
 # Security
 PBKDF2Iterations = 1000 # Set this to 5000 to improve security. But it is slow.
 UseOpenSSL = false

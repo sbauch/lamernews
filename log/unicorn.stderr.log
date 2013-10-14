@@ -21009,3 +21009,6 @@ I, [2013-10-14T17:18:15.495047 #3554]  INFO -- : worker=1 spawned pid=3554
 I, [2013-10-14T17:18:15.495659 #3554]  INFO -- : Refreshing Gem list
 I, [2013-10-14T17:18:16.506942 #3553]  INFO -- : worker=0 ready
 I, [2013-10-14T17:18:16.536539 #3554]  INFO -- : worker=1 ready
+I, [2013-10-14T17:21:23.649801 #3504]  INFO -- : reaped #<Process::Status: pid 3554 exit 0> worker=1
+I, [2013-10-14T17:21:23.650210 #3504]  INFO -- : reaped #<Process::Status: pid 3553 exit 0> worker=0
+I, [2013-10-14T17:21:23.650878 #3504]  INFO -- : master complete
