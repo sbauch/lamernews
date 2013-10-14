@@ -274,7 +274,7 @@ article.deleted {
 
 .comment .info {
     position:relative;
-    left:60px;
+    left:5px;
     font-size:14px;
     color:#999;
 }
@@ -285,15 +285,15 @@ article.deleted {
 }
 
 .comment pre {
-    width:50em;
+    width:45em;
     position:relative;
-    left:60px;
-    margin-top:10px;
+    margin-top:30px;
     white-space: pre-wrap;       /* css-3 */
     white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
     white-space: -pre-wrap;      /* Opera 4-6 */
     white-space: -o-pre-wrap;    /* Opera 7 */
     word-wrap: break-word;       /* Internet Explorer 5.5+ */
+    left: 50px;
 }
 
 article.comment .uparrow, article.comment .downarrow {
@@ -459,6 +459,19 @@ topcomment {
     display: none;
 }
 
+.avatar {
+    width: 48px;
+    height: 48px;
+    float: left;
+}
+
+.comment .vote {
+    float: left;
+    width: 20px;
+    left: 5px;
+    position: relative;
+}
+
 @media only screen and (max-width: 760px),
 (min-device-width: 768px) and (max-device-width: 1024px) {
 
@@ -484,7 +497,7 @@ topcomment {
 
     #content {
         width: 320px;
-        margin-left: 60px;
+        margin-left: 5px;
     }
 
     article h3 {
@@ -505,4 +518,14 @@ topcomment {
         width: 90%;
     }
 
+    .image, .avatar { display: none; }
+    .comment {
+        min-width: 280px;
+    }
+    .comment pre {
+        width: 300px;
+        position: relative;
+        left: 30px;
+        margin-top: 0px
+    } 
 }
