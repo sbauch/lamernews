@@ -355,6 +355,7 @@ topcomment {
     display:inline;
     font-size:28px;
     color: #444;
+		margin-left: 0px !important;
 }
 
 .userinfo a {
