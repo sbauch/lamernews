@@ -1,7 +1,7 @@
 # General
 SiteName = "GV News"
-SiteUrl = "http://lamernews.com"
-SiteDescription = "Programming News"
+SiteUrl = "http://gvnews.herokuapp.com"
+SiteDescription = "Marketing News"
 
 # Redis config
 RedisURL = "redis://pub-redis-19203.us-east-1-2.1.ec2.garantiadata.com:19203"
@@ -51,7 +51,7 @@ SavedNewsPerPage = 10
 TopNewsAgeLimit = 3600*24*30
 
 # Footer links
-FooterTwitterLink = false
+FooterTwitterLink = true
 FooterGoogleGroupLink = false
 
 # API
