@@ -1,6 +1,6 @@
 # General
 SiteName = "GV News"
-SiteUrl = "http://gvnews.herokuapp.com"
+SiteUrl = "http://gv-news.herokuapp.com"
 SiteDescription = "Marketing News"
 
 # Redis config
@@ -52,7 +52,7 @@ SavedNewsPerPage = 10
 TopNewsAgeLimit = 3600*24*30
 
 # Footer links
-FooterTwitterLink = true
+FooterTwitterLink = 'http://twitter.com/garyvee'
 FooterGoogleGroupLink = false
 
 # API
