@@ -1,8 +1,12 @@
+@import url(http://fonts.googleapis.com/css?family=Lato:100,300,400,700);
+
+
 html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td { margin: 0; padding: 0; border: 0; outline: 0; font-weight: inherit; font-style: inherit; font-size: 100%; font-family: inherit; vertical-align: baseline; }
 
 body {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: 'Lato', sans-serif;
     text-rendering: optimizeLegibility;
+    font-weight: 300;
 }
 
 a {
@@ -14,17 +18,27 @@ h2 {
     margin-bottom:20px;
     font-size:22px;
     color:#333;
+    font-weight: 300; 
 }
 
 li {
     list-style-type: none;
 }
 
+input, textarea {
+    font-size: 16px;
+    padding: 5px;
+}
+
+textarea { font-family: 'Lato', sans-serif; }
+ 
+label { font-size: 16px; }
+
 header {
     display:block;
     position:relative;
-    padding: 15px 0px 0px 15px;
-    background-color:#eee;
+    padding: 8px 0px 10px 15px;
+    background-color: #a2bec6;
     border-bottom: 1px #ccc solid;
 }
 
@@ -45,10 +59,13 @@ header h1 small {
 
 #content {
     display:block;
-    margin-top:20px;
     margin-bottom:20px;
-    padding: 15px;
+    padding: 15px 10px;
+    width: 920px;
+    margin-left: 100px;
 }
+
+#content h2 { font-weight: 400; margin-left: -50px; }
 
 footer {
     display:block;
@@ -66,12 +83,13 @@ nav {
 
 nav a {
     margin-left: 20px;
+    color: #fff;
 }
 
 #account {
     color:#aaa;
     position: absolute;
-    top: 5px;
+    top: 13px;
     right: 10px;
     font-weight:bold;
     font-size:14px;
@@ -85,13 +103,21 @@ nav a {
 #login,#submitform {
     display:block;
     position:relative;
-    width:150px;
 }
 
 #login label, #submitform label {
-    font-size:12px;
-    font-weight:bold;
+    font-size: 16px;
+    margin-bottom: 5px;
 }
+
+#login input[type=text],#login input[type=password] { 
+    width: 90%;
+    max-width: 400px;
+}
+
+#submitform input[type=text],
+#submitform textarea { width: 450px; }
+
 
 div #errormsg {
     width:400px;
@@ -100,20 +126,49 @@ div #errormsg {
     margin-top: 15px;
 }
 
+
 article {
     display: block;
     font-size: 16px;
     margin-bottom:15px;
     border: 1px solid transparent;
+    position: relative;
+}
+
+article.promoted { 
+    background-color: yellow;
+    padding: 5px 0 5px 0;
 }
 
 article.active {
     border: 1px dashed #000;
 }
+article:hover {
+    background-color: #eee;
+}
+article.promoted:hover { 
+    background-color: yellow;
+}
 
-article h2 {
+article h2, article h3 {
     display: inline;
-    font-size:20px;
+}
+
+article .image { 
+    width: 48px;
+    height: 48px;
+    overflow: hidden;
+    margin-right: 5px;
+    position: absolute;
+    left: -60px;
+    -webkit-border-radius: 60px; -moz-border-radius: 60px; border-radius: 60px;
+}
+
+article .image img {
+    max-width: 100px;
+    position: absolute;
+    left: -25px;
+    -webkit-border-radius: 60px; -moz-border-radius: 60px; border-radius: 60px;
 }
 
 article address {
@@ -122,17 +177,19 @@ article address {
     font-size:14px;
 }
 
-article h2 a {
+article h3 a {
     color: black;
+    font-weight: 700; 
 }
 
-article h2 a:visited {
-    color: #999999;
+article .vote {
+    float: left;
+    width: 20px;
 }
-
 article .uparrow, article .downarrow {
     font-size: 16px;
     cursor: pointer;
+    display: block;
 }
 
 article .uparrow {
@@ -146,7 +203,7 @@ article .downarrow {
 article p {
     font-size:14px;
     color:#999;
-    margin-left:20px;
+    margin-left:40px;
 }
 
 article p a {
@@ -170,10 +227,33 @@ article.deleted {
     color:#999;
 }
 
-form textarea {
-    font-family: Courier;
-    font-size:14px;
+/**
+ * Featured and list styles 
+ */
+
+.list section {  }
+
+.featured section { }
+
+/*
+.featured article .image {
+    width: 300px;
+    height: 100px;
+    position: relative;
+    clear: both;
+    margin-bottom: 10px;
+    overflow: hidden;
+    border-radius: 10px;
+    left: 0;
 }
+
+.featured article .image img {
+    max-width: 400px;
+    left: -50px;
+    position: absolute;
+}
+*/
+
 
 .comment {
     position:relative;
@@ -189,6 +269,7 @@ form textarea {
     left:0px;
     width:48px;
     height:48px;
+    -webkit-border-radius: 60px; -moz-border-radius: 60px; border-radius: 60px;
 }
 
 .comment .info {
@@ -208,8 +289,6 @@ form textarea {
     position:relative;
     left:60px;
     margin-top:10px;
-    font-family: Courier;
-    font-size: 14px;
     white-space: pre-wrap;       /* css-3 */
     white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
     white-space: -pre-wrap;      /* Opera 4-6 */
@@ -370,7 +449,7 @@ topcomment {
 }
 
 #link-menu-mobile {
-    color: #aaa;
+    color: #fff;
     position: absolute;
     top: 20px;
     right: 10px;
@@ -399,7 +478,30 @@ topcomment {
     }
 
     #link-menu-mobile{
-        display:block;
+        display:block; 
+    }
+
+    #content {
+        width: 320px;
+        margin-left: 60px;
+    }
+
+    article h3 {
+        display: block;
+    }
+    address {
+        display: block;
+    }
+    article p {
+        margin-left: 0;
+    }
+
+    #newslist form {
+        margin-left: -50px;
+    }
+
+    #commentform textarea {
+        width: 90%;
     }
 
 }

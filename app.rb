@@ -76,8 +76,16 @@ end
 get '/' do
     H.set_title "#{SiteName} - #{SiteDescription}"
     news,numitems = get_top_news
+    featured,num_featured = get_featured_news
+
+    news = news - featured
     H.page {
-        H.h2 {"Top news"}+news_list_to_html(news)
+        H.div(:class => "featured") {
+            news_list_to_html featured
+        } +
+        H.div(:class => "list") {
+            news_list_to_html news
+        }
     }
 end
 
@@ -219,11 +227,16 @@ get '/login' do
         H.div(:id => "login") {
             H.form(:name=>"f") {
                 H.label(:for => "username") {"username"}+
+                H.br+
                 H.inputtext(:id => "username", :name => "username")+
+                H.br+
                 H.label(:for => "password") {"password"}+
-                H.inputpass(:id => "password", :name => "password")+H.br+
-                H.checkbox(:name => "register", :value => "1")+
-                "create account"+H.br+
+                H.br+
+                H.inputpass(:id => "password", :name => "password")+
+                H.br+
+                H.checkbox(:id => "register", :name => "register", :value => "1")+
+                H.label(:for => "register") {"create account"}+
+                H.br+
                 H.submit(:name => "do_login", :value => "Login")
             }
         }+
@@ -247,8 +260,11 @@ get '/reset-password' do
         H.div(:id => "login") {
             H.form(:name=>"f") {
                 H.label(:for => "username") {"username"}+
+                H.br+
                 H.inputtext(:id => "username", :name => "username")+
+                H.br+
                 H.label(:for => "password") {"email"}+
+                H.br+
                 H.inputtext(:id => "email", :name => "email")+H.br+
                 H.submit(:name => "do_reset", :value => "Reset password")
             }
@@ -313,14 +329,28 @@ get '/submit' do
         H.div(:id => "submitform") {
             H.form(:name=>"f") {
                 H.inputhidden(:name => "news_id", :value => -1)+
-                H.label(:for => "title") {"title"}+
-                H.inputtext(:id => "title", :name => "title", :size => 80, :value => (params[:t] ? H.entities(params[:t]) : ""))+H.br+
-                H.label(:for => "url") {"url"}+H.br+
-                H.inputtext(:id => "url", :name => "url", :size => 60, :value => (params[:u] ? H.entities(params[:u]) : ""))+H.br+
-                "or if you don't have an url type some text"+
+                H.label(:for => "title") {"Title:"}+
                 H.br+
-                H.label(:for => "text") {"text"}+
+                H.inputtext(:id => "title", :name => "title", :size => 80, :value => (params[:t] ? H.entities(params[:t]) : ""))+H.br+
+                H.br+
+                H.label(:for => "url") {"Url:"}+H.br+
+                H.inputtext(:id => "url", :name => "url", :size => 60, :value => (params[:u] ? H.entities(params[:u]) : ""))+H.br+
+                H.br+
+                H.label(:for => "image") {"Preview image:"}+H.br+
+                H.inputtext(:id => "image", :name => "image", :size => 60, :value => (params[:i] ? H.entities(params[:i]) : ""))+H.br+
+                H.br+
+                H.label(:for => "text") {"Or, enter a description:"}+
+                H.br+
                 H.textarea(:id => "text", :name => "text", :cols => 60, :rows => 10) {}+
+                H.br+
+                (!user_is_admin?($user) ? H.span() : H.div(:id => "admin_only") {
+                    H.br+
+                    H.checkbox(:name => "featured", :id => "featured", :value => "1")+
+                    H.label(:for => "featured") {"Editor's pick/feature post"}+
+                    H.br+
+                    H.checkbox(:name => "promoted", :id => "promoted", :value => "1")+
+                    H.label(:for => "promoted") {"Promoted/sponsored post"}
+                })+
                 H.button(:name => "do_submit", :value => "Submit")
             }
         }+
@@ -371,7 +401,7 @@ get "/news/:news_id" do
             news_to_html(news)
         }+top_comment+
         if $user and !news["del"]
-            H.form(:name=>"f") {
+            H.form(:name=>"f", :id => :commentform) {
                 H.inputhidden(:name => "news_id", :value => news["id"])+
                 H.inputhidden(:name => "comment_id", :value => -1)+
                 H.inputhidden(:name => "parent_id", :value => -1)+
@@ -492,20 +522,30 @@ get "/editnews/:news_id" do
         H.div(:id => "submitform") {
             H.form(:name=>"f") {
                 H.inputhidden(:name => "news_id", :value => news['id'])+
-                H.label(:for => "title") {"title"}+
-                H.inputtext(:id => "title", :name => "title", :size => 80,
-                            :value => news['title'])+H.br+
-                H.label(:for => "url") {"url"}+H.br+
-                H.inputtext(:id => "url", :name => "url", :size => 60,
-                            :value => H.entities(news['url']))+H.br+
-                "or if you don't have an url type some text"+
+                H.label(:for => "title") {"Title:"}+
                 H.br+
-                H.label(:for => "text") {"text"}+
-                H.textarea(:id => "text", :name => "text", :cols => 60, :rows => 10) {
-                    H.entities(text)
-                }+H.br+
-                H.checkbox(:name => "del", :value => "1")+
-                "delete this news"+H.br+
+                H.inputtext(:id => "title", :name => "title", :size => 80, :value => news['title'])+H.br+
+                H.br+
+                H.label(:for => "url") {"Url:"}+H.br+
+                H.inputtext(:id => "url", :name => "url", :size => 60, :value => H.entities(news['url']))+H.br+
+                H.br+
+                H.label(:for => "image") {"Preview image:"}+H.br+
+                H.inputtext(:id => "image", :name => "image", :size => 60, :value => news['image'])+H.br+
+                H.br+
+                H.label(:for => "text") {"Or, enter a description:"}+
+                H.br+
+                H.textarea(:id => "text", :name => "text", :cols => 60, :rows => 10) {H.entities(text)}+
+                H.br+
+                H.checkbox(:name => "del", :value => "1")+ "delete this news"+
+                H.br+
+                (!user_is_admin?($user) ? H.span() : H.div(:id => "admin_only") {
+                    H.br+
+                    H.checkbox(:name => "featured", :id => "featured", :value => "1")+
+                    H.label(:for => "featured") {"Editor's pick/feature post"}+
+                    H.br+
+                    H.checkbox(:name => "promoted", :id => "promoted", :value => "1")+
+                    H.label(:for => "promoted") {"Promoted/sponsored post"}
+                })+
                 H.button(:name => "edit_news", :value => "Edit")
             }
         }+
@@ -513,6 +553,10 @@ get "/editnews/:news_id" do
         H.script() {'
             $(function() {
                 $("input[name=edit_news]").click(submit);
+                if(' + (news['featured'] == "1").to_s + ')
+                    $("input[name=featured").prop("checked", true);
+                if(' + (news['promoted'] == "1").to_s + ')
+                    $("input[name=promoted").prop("checked", true);
             });
         '}
     }
@@ -792,11 +836,9 @@ post '/api/submit' do
                 "please wait #{allowed_to_post_in_seconds} seconds."
             }.to_json
         end
-        news_id = insert_news(params[:title],params[:url],params[:text],
-                              $user["id"])
+        news_id = insert_news(params[:title],params[:url],params[:text],params[:image],$user["id"], params[:featured], params[:promoted])
     else
-        news_id = edit_news(params[:news_id],params[:title],params[:url],
-                            params[:text],$user["id"])
+        news_id = edit_news(params[:news_id],params[:title],params[:url],params[:text],params[:image],$user["id"], params[:featured], params[:promoted])
         if !news_id
             return {
                 :status => "err",
@@ -1495,11 +1537,11 @@ end
 def compute_news_rank(news)
     age = (Time.now.to_i - news["ctime"].to_i)
     ## Here's where we can fudge the ranking in Gary's favor a little bit
-    if news['username'] == 'sbauch'
-      rank = ((news["score"].to_f)*100000000)/((age+NewsAgePadding)**RankAgingFactor)
-    else  
+    # if news['username'] == 'sbauch'
+    #   rank = ((news["score"].to_f)*100000000)/((age+NewsAgePadding)**RankAgingFactor)
+    # else  
       rank = ((news["score"].to_f)*1000000)/((age+NewsAgePadding)**RankAgingFactor)
-    end
+    # end
     
     rank = -age if (age > TopNewsAgeLimit)
     return rank
@@ -1513,7 +1555,7 @@ end
 #
 # Return value: the ID of the inserted news, or the ID of the news with
 # the same URL recently added.
-def insert_news(title,url,text,user_id)
+def insert_news(title,url,text,image,user_id, featured, promoted)
     # If we don't have an url but a comment, we turn the url into
     # text://....first comment..., so it is just a special case of
     # title+url anyway.
@@ -1525,6 +1567,18 @@ def insert_news(title,url,text,user_id)
     if !textpost and (id = $r.get("url:"+url))
         return id.to_i
     end
+    
+    if $user and user_is_admin?($user)
+        is_admin = true
+    else
+        is_admin = false
+    end
+
+    is_promoted = promoted.nil? || !is_admin ? 0 : 1
+    is_featured = featured.nil? || !is_admin ? 0 : 1
+
+    rank = 0 #is_featured ? 1000 : 0
+    
     # We can finally insert the news.
     ctime = Time.new.to_i
     news_id = $r.incr("news.count")
@@ -1532,25 +1586,33 @@ def insert_news(title,url,text,user_id)
         "id", news_id,
         "title", title,
         "url", url,
+        "image", image,
         "user_id", user_id,
         "ctime", ctime,
         "score", 0,
-        "rank", 0,
+        "rank", rank,
         "up", 0,
         "down", 0,
-        "comments", 0)
+        "comments", 0,
+        "featured", is_featured, #will feature this post on the top of the list
+        "promoted", is_promoted #promoted post for advertising reasons
+    )
     # The posting user virtually upvoted the news posting it
     rank,error = vote_news(news_id,user_id,:up)
     # Add the news to the user submitted news
     $r.zadd("user.posted:#{user_id}",ctime,news_id)
     # Add the news into the chronological view
     $r.zadd("news.cron",ctime,news_id)
-    # Add the news into the top view
-    $r.zadd("news.top",rank,news_id)
+    # Add to top news
+    $r.zadd "news.top", rank, news_id
     # Add the news url for some time to avoid reposts in short time
     $r.setex("url:"+url,PreventRepostTime,news_id) if !textpost
     # Set a timeout indicating when the user may post again
     $r.setex("user:#{$user['id']}:submitted_recently",NewsSubmissionBreak,'1')
+    
+    # stash this as a featured post
+    $r.zadd "news.featured", rank, news_id if is_featured == "1"
+        
     return news_id
 end
 
@@ -1560,7 +1622,7 @@ end
 # On success but when a news deletion is performed (empty title) -1 is returned.
 # On failure (for instance news_id does not exist or does not match
 #             the specified user_id) false is returned.
-def edit_news(news_id,title,url,text,user_id)
+def edit_news(news_id,title,url,text,image,user_id, featured, promoted)
     news = get_news_by_id(news_id)
     return false if !news or news['user_id'].to_i != user_id.to_i and !user_is_admin?($user)
     return false if !(news['ctime'].to_i > (Time.now.to_i - NewsEditTime)) and !user_is_admin?($user)
@@ -1582,10 +1644,34 @@ def edit_news(news_id,title,url,text,user_id)
         $r.del("url:"+news['url'])
         $r.setex("url:"+url,PreventRepostTime,news_id) if !textpost
     end
+
+    if $user and user_is_admin?($user)
+        is_admin = true
+    else
+        is_admin = false
+    end
+
+    is_featured = is_admin ? (featured.nil? || featured == "0" ? 0 : 1) : news['featured']
+    is_promoted = is_admin ? (promoted.nil? || promoted == "0" ? 0 : 1) : news['promoted'] 
+
+    rank = news['rank']
+
     # Edit the news fields.
     $r.hmset("news:#{news_id}",
         "title", title,
-        "url", url)
+        "url", url,
+        "image", image,
+        "featured", is_featured,
+        "promoted", is_promoted
+        )
+    
+    # stash this as a featured post
+    if is_featured == 1
+        $r.zadd "news.featured", rank, news_id
+    else
+        $r.zrem("news.featured",news_id)
+    end
+        
     return news_id
 end
 
@@ -1598,6 +1684,7 @@ def del_news(news_id,user_id)
     $r.hmset("news:#{news_id}","del",1)
     $r.zrem("news.top",news_id)
     $r.zrem("news.cron",news_id)
+    $r.zrem("news.featured",news_id)
     return true
 end
 
@@ -1655,6 +1742,7 @@ def news_to_html(news)
     return H.article(:class => "deleted") {
         "[deleted news]"
     } if news["del"]
+
     domain = news_domain(news)
     news = {}.merge(news) # Copy the object so we can modify it as we wish.
     news["url"] = "/news/#{news["id"]}" if !domain
@@ -1667,18 +1755,26 @@ def news_to_html(news)
         downclass << " voted"
         upclass << " disabled"
     end
-    H.article("data-news-id" => news["id"]) {
-        H.a(:href => "#up", :class => upclass) {
-            "&#9650;"
-        }+" "+
-        H.h2 {
+    H.article("data-news-id" => news["id"], :class => news['promoted'] == "1" ? "promoted" : "" ) {
+        H.div(:class => :image) {
+            H.img(:src=>news['image'])
+        } + 
+        H.div(:class => :vote) {
+            H.a(:href => "#up", :class => upclass) {
+                "&#9650;"    
+            }+
+            H.a(:href => "#down", :class =>  downclass) {
+                "&#9660;"
+            }
+        }+
+        H.h3 {
             H.a(:href=>news["url"], :rel => "nofollow") {
                 H.entities news["title"]
             }
         }+" "+
         H.address {
             if domain
-                "at "+H.entities(domain)
+                "("+H.entities(domain)+")"
             else "" end +
             if ($user and $user['id'].to_i == news['user_id'].to_i and
                 news['ctime'].to_i > (Time.now.to_i - NewsEditTime))
@@ -1687,12 +1783,10 @@ def news_to_html(news)
                 }
             else "" end
         }+
-        H.a(:href => "#down", :class =>  downclass) {
-            "&#9660;"
-        }+
         H.p {
-            H.span(:class => :upvotes) { news["up"] } + " up and " +
-            H.span(:class => :downvotes) { news["down"] } + " down, posted by " +            
+            #H.span(:class => :upvotes) { news["up"] } + " up and " +
+            #H.span(:class => :downvotes) { news["down"] } + " down, posted by " +            
+            H.span(:class => :upvotes) { news['score'] } + " point" + (news['score'] == "1" ? "" : "s") + " by " + 
             H.username {
                 H.a(:href=>"/user/"+URI.encode(news["username"])) {
                     H.entities news["username"]
@@ -1798,6 +1892,15 @@ def get_posted_news(user_id,start,count)
     numitems = $r.zcard("user.posted:#{user_id}").to_i
     news_ids = $r.zrevrange("user.posted:#{user_id}",start,start+(count-1))
     return get_news_by_id(news_ids),numitems
+end
+
+# Gets all featured news by rank
+def get_featured_news(start=0, count=TopNewsPerPage)
+    numitems = $r.zcard "news.featured"
+    news_ids = $r.zrevrange "news.featured",start,start+(count-1)
+    result = get_news_by_id(news_ids,:update_rank => true)
+    # Sort by rank before returning, since we adjusted ranks during iteration.
+    return result.sort{|a,b| b["rank"].to_f <=> a["rank"].to_f},numitems
 end
 
 ###############################################################################
