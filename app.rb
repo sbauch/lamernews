@@ -40,12 +40,14 @@ require_relative 'mail'
 require_relative 'about'
 require 'openssl' if UseOpenSSL
 require 'uri'
+require 'httparty'
+require 'nokogiri'
 
-Version = "0.11.0"
+Version = "1.0"
 
 def setup_redis(uri=RedisURL)
     uri = URI.parse(uri)
-    $r = Redis.new(:host => uri.host, :port => uri.port, :password => '8DPofDKbDbIo9GEu') unless $r
+    $r = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password) unless $r
 end
 
 before do
@@ -335,9 +337,6 @@ get '/submit' do
                 H.br+
                 H.label(:for => "url") {"Url:"}+H.br+
                 H.inputtext(:id => "url", :name => "url", :size => 60, :value => (params[:u] ? H.entities(params[:u]) : ""))+H.br+
-                H.br+
-                H.label(:for => "image") {"Preview image:"}+H.br+
-                H.inputtext(:id => "image", :name => "image", :size => 60, :value => (params[:i] ? H.entities(params[:i]) : ""))+H.br+
                 H.br+
                 H.label(:for => "text") {"Or, enter a description:"}+
                 H.br+
@@ -836,9 +835,9 @@ post '/api/submit' do
                 "please wait #{allowed_to_post_in_seconds} seconds."
             }.to_json
         end
-        news_id = insert_news(params[:title],params[:url],params[:text],params[:image],$user["id"], params[:featured], params[:promoted])
+        news_id = insert_news(params[:title],params[:url],params[:text],$user["id"], params[:featured], params[:promoted])
     else
-        news_id = edit_news(params[:news_id],params[:title],params[:url],params[:text],params[:image],$user["id"], params[:featured], params[:promoted])
+        news_id = edit_news(params[:news_id],params[:title],params[:url],params[:text],$user["id"], params[:featured], params[:promoted])
         if !news_id
             return {
                 :status => "err",
@@ -1555,7 +1554,7 @@ end
 #
 # Return value: the ID of the inserted news, or the ID of the news with
 # the same URL recently added.
-def insert_news(title,url,text,image,user_id, featured, promoted)
+def insert_news(title,url,text,user_id, featured, promoted)
     # If we don't have an url but a comment, we turn the url into
     # text://....first comment..., so it is just a special case of
     # title+url anyway.
@@ -1573,6 +1572,10 @@ def insert_news(title,url,text,image,user_id, featured, promoted)
     else
         is_admin = false
     end
+    
+    if !textpost
+      image = get_open_graph_image(url)
+    end  
 
     is_promoted = promoted.nil? || !is_admin ? 0 : 1
     is_featured = featured.nil? || !is_admin ? 0 : 1
@@ -1615,6 +1618,19 @@ def insert_news(title,url,text,image,user_id, featured, promoted)
         
     return news_id
 end
+
+# Get an Open Graph image url for the submitted news
+#
+# On success the url is returned
+# On failure nil is returned
+#
+def get_open_graph_image(url)
+  resp = HTTParty.get(url)
+  doc = Nokogiri::HTML(resp.body)
+  node = doc.at('meta[property="og:image"]')
+  # ['content']
+  return !node.nil? ? node['content'] : nil
+end  
 
 # Edit an already existing news.
 #

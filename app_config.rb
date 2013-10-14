@@ -1,11 +1,10 @@
 # General
 SiteName = "GV News"
-SiteUrl = "http://lamernews.com"
-SiteDescription = "Programming News"
+SiteUrl = "http://gv-news.herokuapp.com"
+SiteDescription = "Marketing News"
 
 # Redis config
-RedisURL = "redis://pub-redis-19203.us-east-1-2.1.ec2.garantiadata.com:19203"
-#RedisURL = "redis://localhost:6379"
+RedisURL =  ENV['REDIS_DB'] ||"redis://localhost:6379"
 
 # Security
 PBKDF2Iterations = 1000 # Set this to 5000 to improve security. But it is slow.
@@ -52,7 +51,7 @@ SavedNewsPerPage = 10
 TopNewsAgeLimit = 3600*24*30
 
 # Footer links
-FooterTwitterLink = false
+FooterTwitterLink = 'http://twitter.com/garyvee'
 FooterGoogleGroupLink = false
 
 # API
