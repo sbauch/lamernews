@@ -3,7 +3,13 @@ GEM
   specs:
     diff-lcs (1.2.4)
     hiredis (0.4.5)
+    httparty (0.11.0)
+      multi_json (~> 1.0)
+      multi_xml (>= 0.5.2)
     json (1.7.7)
+    multi_json (1.7.7)
+    multi_xml (0.5.3)
+    nokogiri (1.5.9)
     rack (1.5.2)
     rack-protection (1.5.0)
       rack
@@ -31,7 +37,9 @@ PLATFORMS
 
 DEPENDENCIES
   hiredis (~> 0.4.5)
+  httparty
   json (~> 1.7.7)
+  nokogiri
   rack-test
   rake
   redis (~> 3.0.4)
