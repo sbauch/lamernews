@@ -1150,17 +1150,17 @@ def application_footer
         keyboardnavigation = ""
     end
     H.footer {
-        links = [
-            ["about", "/about"],
-            ["source code", "http://github.com/antirez/lamernews"],
-            ["rss feed", "/rss"],
-            ["twitter", FooterTwitterLink],
-            ["google group", FooterGoogleGroupLink]
-        ]
-        links.map{|l| l[1] ?
-            H.a(:href => l[1]) {H.entities l[0]} :
-            nil
-        }.select{|l| l}.join(" | ")
+        # links = [
+        #     ["about", "/about"],
+        #     ["source code", "http://github.com/antirez/lamernews"],
+        #     ["rss feed", "/rss"],
+        #     ["twitter", FooterTwitterLink],
+        #     ["google group", FooterGoogleGroupLink]
+        # ]
+        # links.map{|l| l[1] ?
+        #     H.a(:href => l[1]) {H.entities l[0]} :
+        #     nil
+        # }.select{|l| l}.join(" | ")
     }+apisecret+keyboardnavigation
 end
 

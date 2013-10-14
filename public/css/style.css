@@ -483,7 +483,7 @@ topcomment {
 
     #content {
         width: 320px;
-        margin-left: 60px;
+        margin-left: 5px;
     }
 
     article h3 {
@@ -503,5 +503,7 @@ topcomment {
     #commentform textarea {
         width: 90%;
     }
+
+    .image { display: none; }
 
 }
