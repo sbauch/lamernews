@@ -528,9 +528,6 @@ get "/editnews/:news_id" do
                 H.label(:for => "url") {"Url:"}+H.br+
                 H.inputtext(:id => "url", :name => "url", :size => 60, :value => H.entities(news['url']))+H.br+
                 H.br+
-                H.label(:for => "image") {"Preview image:"}+H.br+
-                H.inputtext(:id => "image", :name => "image", :size => 60, :value => news['image'])+H.br+
-                H.br+
                 H.label(:for => "text") {"Or, enter a description:"}+
                 H.br+
                 H.textarea(:id => "text", :name => "text", :cols => 60, :rows => 10) {H.entities(text)}+
@@ -1638,7 +1635,7 @@ end
 # On success but when a news deletion is performed (empty title) -1 is returned.
 # On failure (for instance news_id does not exist or does not match
 #             the specified user_id) false is returned.
-def edit_news(news_id,title,url,text,image,user_id, featured, promoted)
+def edit_news(news_id,title,url,text,user_id, featured, promoted)
     news = get_news_by_id(news_id)
     return false if !news or news['user_id'].to_i != user_id.to_i and !user_is_admin?($user)
     return false if !(news['ctime'].to_i > (Time.now.to_i - NewsEditTime)) and !user_is_admin?($user)
@@ -1676,7 +1673,6 @@ def edit_news(news_id,title,url,text,image,user_id, featured, promoted)
     $r.hmset("news:#{news_id}",
         "title", title,
         "url", url,
-        "image", image,
         "featured", is_featured,
         "promoted", is_promoted
         )

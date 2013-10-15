@@ -47,7 +47,6 @@ function submit() {
         news_id: $("input[name=news_id]").val(),
         title: $("input[name=title]").val(),
         url: $("input[name=url]").val(),
-        image: $("input[name=image]").val(),
         text: $("textarea[name=text]").val(),
         featured: $("input[name=featured]").length && $("input[name=featured]").attr("checked"),
         promoted: $("input[name=promoted]").length && $("input[name=promoted]").attr("checked"),
