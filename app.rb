@@ -47,7 +47,8 @@ Version = "1.0"
 
 def setup_redis(uri=RedisURL)
     uri = URI.parse(uri)
-    $r = Redis.new(:host => uri.host, :port => uri.port, :password => RedisPass) unless $r
+    #$r = Redis.new(:host => uri.host, :port => uri.port, :password => RedisPass) unless $r
+    $r = Redis.new(:host => uri.host, :port => uri.port) unless $r
 end
 
 before do
@@ -127,7 +128,7 @@ get '/latest/:start' do
         :link => "/latest/$"
     }
     H.page {
-        H.h2 {"Latest news"}+
+        #H.h2 {"Latest news"}+
         H.section(:id => "newslist") {
             list_items(paginate)
         }
@@ -1098,8 +1099,7 @@ def application_header
     menu_mobile = H.a(:href => "#", :id => "link-menu-mobile"){"<~>"}
     H.header {
         H.h1 {
-            H.a(:href => "/") {H.entities SiteName}+" "+
-            H.small {Version}
+            H.a(:href => "/") {H.entities SiteName}
         }+navbar+" "+rnavbar+" "+menu_mobile
     }
 end

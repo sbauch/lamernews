@@ -65,7 +65,7 @@ header h1 small {
     margin-left: 100px;
 }
 
-#content h2 { font-weight: 400; margin-left: -50px; }
+#content h2 { font-weight: 400; }
 
 footer {
     display:block;
@@ -528,4 +528,7 @@ topcomment {
         left: 30px;
         margin-top: 0px
     } 
+
+    #submitform input[type=text],
+    #submitform textarea { width: 320px; }
 }
