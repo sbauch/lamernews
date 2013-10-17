@@ -78,19 +78,45 @@ before do
 end
 
 get '/' do
+    redirect '/top/0'
+end
+
+get '/top/:start' do    
+    start = params[:start].to_i
     H.set_title "#{SiteName} - #{SiteDescription}"
     news,numitems = get_top_news
     featured,num_featured = get_featured_news
 
     news = news - featured
+    
+    paginate = {
+        :get => Proc.new {|start,count|
+            get_top_news(start,count)
+        },
+        :render => Proc.new {|item| news_to_html(item)},
+        :start => start,
+        :perpage => TopNewsPerPage,
+        :link => "/top/$"
+    }
     H.page {
-        H.div(:class => "featured") {
+         H.div(:class => "featured") {
             news_list_to_html featured
         } +
-        H.div(:class => "list") {
-            news_list_to_html news
+        #H.h2 {"Latest news"}+
+        H.section(:id => "newslist") {
+            list_items(paginate)
         }
     }
+    
+    # H.page {
+    #       
+    #        H.div(:class => "featured") {
+    #            news_list_to_html featured
+    #        } +
+    #        H.div(:class => "list") {
+    #            list_items(paginate)
+    #        }
+    #    }
 end
 
 get '/rss' do
