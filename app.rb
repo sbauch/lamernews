@@ -42,6 +42,7 @@ require 'openssl' if UseOpenSSL
 require 'uri'
 require 'httparty'
 require 'nokogiri'
+require 'stringex'
 
 Version = "1.0"
 
@@ -509,9 +510,14 @@ get "/editcomment/:news_id/:comment_id" do
     }
 end
 
-get "/editnews/:news_id" do
+get "/editnews/:news_param" do
     redirect "/login" if !$user
-    news = get_news_by_id(params["news_id"])
+    integer = !!params[:news_param].match(/^-?[0-9]+$/)
+    if integer
+        news = get_news_by_id(params["news_param"])
+    else
+        news = get_news_by_slug(params['news_param'])
+    end   
     halt(404,"404 - This news does not exist.") if !news
     halt(500,"Permission denied.") if $user['id'].to_i != news['user_id'].to_i and !user_is_admin?($user)
 
@@ -851,7 +857,7 @@ post '/api/submit' do
     end
     return  {
         :status => "ok",
-        :news_id => news_id.to_i
+        :news_id => news_id
     }.to_json
 end
 
@@ -919,12 +925,13 @@ post '/api/postcomment' do
         :status => "err",
         :error => "Invalid news, comment, or edit time expired."
     }.to_json if !info
+    slug = get_news_by_id(params['news_id'])['slug']
     return {
         :status => "ok",
         :op => info['op'],
         :comment_id => info['comment_id'],
         :parent_id => params['parent_id'],
-        :news_id => params['news_id']
+        :news_id => slug || params['news_id']
     }.to_json
 end
 
@@ -1440,6 +1447,11 @@ def get_news_by_id(news_ids,opt={})
     opt[:single] ? result[0] : result
 end
 
+def get_news_by_slug(slug)
+    id = $r.get("slug.to.id:#{slug}")
+    return nil if !id
+    get_news_by_id(id)
+end
 # Vote the specified news in the context of a given user.
 # type is either :up or :down
 # 
@@ -1560,6 +1572,7 @@ def insert_news(title,url,text,user_id, featured, promoted)
     # If we don't have an url but a comment, we turn the url into
     # text://....first comment..., so it is just a special case of
     # title+url anyway.
+    slug = title.to_url
     textpost = url.length == 0
     if url.length == 0
         url = "text://"+text[0...CommentMaxLength]
@@ -1600,8 +1613,11 @@ def insert_news(title,url,text,user_id, featured, promoted)
         "down", 0,
         "comments", 0,
         "featured", is_featured, #will feature this post on the top of the list
-        "promoted", is_promoted #promoted post for advertising reasons
+        "promoted", is_promoted, #promoted post for advertising reasons
+        "slug", slug
     )
+    $r.set("slug.to.id:#{slug}",news_id)
+
     # The posting user virtually upvoted the news posting it
     rank,error = vote_news(news_id,user_id,:up)
     # Add the news to the user submitted news
@@ -1618,7 +1634,7 @@ def insert_news(title,url,text,user_id, featured, promoted)
     # stash this as a featured post
     $r.zadd "news.featured", rank, news_id if is_featured == "1"
         
-    return news_id
+    return slug
 end
 
 # Get an Open Graph image url for the submitted news
@@ -1688,8 +1704,8 @@ def edit_news(news_id,title,url,text,user_id, featured, promoted)
     else
         $r.zrem("news.featured",news_id)
     end
-        
-    return news_id
+
+    return news['slug'] || news_id
 end
 
 # Mark an existing news as removed.
@@ -1759,10 +1775,12 @@ def news_to_html(news)
     return H.article(:class => "deleted") {
         "[deleted news]"
     } if news["del"]
+    
+    news_param = news['slug'] || news['id']
 
     domain = news_domain(news)
     news = {}.merge(news) # Copy the object so we can modify it as we wish.
-    news["url"] = "/news/#{news["id"]}" if !domain
+    news["url"] = "/news/#{news_param}" if !domain
     upclass = "uparrow"
     downclass = "downarrow"
     if news["voted"] == :up
@@ -1795,7 +1813,7 @@ def news_to_html(news)
             else "" end +
             if ($user and $user['id'].to_i == news['user_id'].to_i and
                 news['ctime'].to_i > (Time.now.to_i - NewsEditTime))
-                " " + H.a(:href => "/editnews/#{news["id"]}") {
+                " " + H.a(:href => "/editnews/#{news_param}") {
                     "[edit]"
                 }
             else "" end
@@ -1809,7 +1827,7 @@ def news_to_html(news)
                     H.entities news["username"]
                 }
             }+" "+str_elapsed(news["ctime"].to_i)+" "+
-            H.a(:href => "/news/#{news["id"]}") {
+            H.a(:href => "/news/#{news_param}") {
                 comments_number = news["comments"].to_i
                 if comments_number != 0
                     "#{news["comments"] + ' comment'}" + "#{'s' if comments_number>1}"
@@ -1818,7 +1836,7 @@ def news_to_html(news)
                 end
             }+
             if $user and user_is_admin?($user)
-                " - "+H.a(:href => "/editnews/#{news["id"]}") { "edit" }+" - "+H.a(:href => "http://twitter.com/intent/tweet?url=#{SiteUrl}/news/#{news["id"]}&text="+H.urlencode(news["title"])+" - ") { "tweet" }
+                " - "+H.a(:href => "/editnews/#{news_param}") { "edit" }+" - "+H.a(:href => "http://twitter.com/intent/tweet?url=#{SiteUrl}/news/#{news_param}&text="+H.urlencode(news["title"])+" - ") { "tweet" }
             else "" end
         }+
         if params and params[:debug] and $user and user_is_admin?($user)

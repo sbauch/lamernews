@@ -9,6 +9,7 @@ gem 'json', '~> 1.7.7'
 gem 'ruby-hmac', '~> 0.4.0'
 gem 'httparty'
 gem 'nokogiri'
+gem 'stringex'
 
 group :development, :test do
   gem 'rake'
