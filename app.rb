@@ -377,8 +377,13 @@ get '/logout' do
     redirect "/"
 end
 
-get "/news/:news_id" do
-    news = get_news_by_id(params["news_id"])
+get "/news/:news_param" do
+    integer = !!params[:news_param].match(/^-?[0-9]+$/)
+    if integer
+        news = get_news_by_id(params["news_param"])
+    else
+        news = get_news_by_slug(params['news_param'])
+    end    
     halt(404,"404 - This news does not exist.") if !news
     # Show the news text if it is a news without URL.
     if !news_domain(news) and !news["del"]
