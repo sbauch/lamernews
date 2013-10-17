@@ -95,7 +95,7 @@ get '/top/:start' do
         },
         :render => Proc.new {|item| news_to_html(item)},
         :start => start,
-        :perpage => start > 1 ? TopNewsPerPage : TopNewsPerPage - 1, # minus one for featured on first page
+        :perpage => start > 0 ? TopNewsPerPage : TopNewsPerPage - num_featured, # minus for featured on first page
         :link => "/top/$"
     }
     H.page {
