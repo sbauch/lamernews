@@ -1,11 +1,18 @@
 # General
-SiteName = "GV News"
-SiteUrl = "http://gv-news.herokuapp.com"
-SiteDescription = "Marketing News"
+SiteName = "NickLinks"
+SiteUrl = "http://nicklinks.com"
+SiteDescription = "The gateway to marketing. Get hooked."
 
 # Redis config
-RedisURL =  'redis://pub-redis-19203.us-east-1-2.1.ec2.garantiadata.com:19203' #||"redis://localhost:6379"
-RedisPass = '8DPofDKbDbIo9GEu'
+
+## Production
+#RedisURL =  'redis://ip-10-159-86-26.ec2.internal'
+#RedisPass = ''
+
+## Local 
+RedisURL =  "redis://localhost:6379"
+RedisPass = ''
+
 # Security
 PBKDF2Iterations = 1000 # Set this to 5000 to improve security. But it is slow.
 UseOpenSSL = false
