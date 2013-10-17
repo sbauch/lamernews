@@ -95,13 +95,14 @@ get '/top/:start' do
         },
         :render => Proc.new {|item| news_to_html(item)},
         :start => start,
-        :perpage => TopNewsPerPage,
+        :perpage => start > 1 ? TopNewsPerPage : TopNewsPerPage - 1, # minus one for featured on first page
         :link => "/top/$"
     }
     H.page {
-         H.div(:class => "featured") {
-            news_list_to_html featured
-        } +
+       
+            H.div(:class => "featured") {
+                news_list_to_html featured  unless start > 0 # not showing featured on top unless first page. if we change this lets also change above to make count same cross pages
+                } +
         #H.h2 {"Latest news"}+
         H.section(:id => "newslist") {
             list_items(paginate)
