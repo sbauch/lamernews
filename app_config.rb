@@ -6,12 +6,12 @@ SiteDescription = "The gateway to marketing. Get hooked."
 # Redis config
 
 ## Production
-#RedisURL =  'redis://ip-10-159-86-26.ec2.internal'
+#RedisURL =  'redis://ip-10-159-86-26.ec2.internal:6379'
 #RedisPass = ''
 
 ## Local 
 RedisURL =  "redis://localhost:6379"
-RedisPass = ''
+#RedisPass = ''
 
 # Security
 PBKDF2Iterations = 1000 # Set this to 5000 to improve security. But it is slow.
