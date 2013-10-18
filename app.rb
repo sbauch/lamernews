@@ -78,19 +78,46 @@ before do
 end
 
 get '/' do
+    redirect '/top/0'
+end
+
+get '/top/:start' do    
+    start = params[:start].to_i
     H.set_title "#{SiteName} - #{SiteDescription}"
     news,numitems = get_top_news
     featured,num_featured = get_featured_news
 
     news = news - featured
+    
+    paginate = {
+        :get => Proc.new {|start,count|
+            get_top_news(start,count,num_featured)
+        },
+        :render => Proc.new {|item| news_to_html(item)},
+        :start => start,
+        :perpage => start > 0 ? TopNewsPerPage : TopNewsPerPage - num_featured, # minus for featured on first page
+        :link => "/top/$"
+    }
     H.page {
-        H.div(:class => "featured") {
-            news_list_to_html featured
-        } +
-        H.div(:class => "list") {
-            news_list_to_html news
+       
+            H.div(:class => "featured") {
+                news_list_to_html featured  unless start > 0 # not showing featured on top unless first page. if we change this lets also change above to make count same cross pages
+                } +
+        #H.h2 {"Latest news"}+
+        H.section(:id => "newslist") {
+            list_items(paginate)
         }
     }
+    
+    # H.page {
+    #       
+    #        H.div(:class => "featured") {
+    #            news_list_to_html featured
+    #        } +
+    #        H.div(:class => "list") {
+    #            list_items(paginate)
+    #        }
+    #    }
 end
 
 get '/rss' do
@@ -1392,11 +1419,24 @@ def get_news_by_id(news_ids,opt={})
         opt[:single] = true
         news_ids = [news_ids]
     end
-    news = $r.pipelined {
-        news_ids.each{|nid|
-            $r.hgetall("news:#{nid}")
+    
+    if opt[:ignore_featured] == true
+        p 'ignoring'
+        news = $r.pipelined {
+            news_ids.each{|nid|
+                $r.hgetall("news:#{nid}")
+            }
         }
-    }
+        news = news.reject{|n| n['featured'] == "1"}
+    else    
+    
+        news = $r.pipelined {
+            news_ids.each{|nid|
+                $r.hgetall("news:#{nid}")
+            }
+        }
+    end
+    
     return [] if !news # Can happen only if news_ids is an empty array.
 
     # Remove empty elements
@@ -1900,12 +1940,13 @@ end
 # This way we can completely avoid having a cron job adjusting our news
 # score since this is done incrementally when there are pageviews on the
 # site.
-def get_top_news(start=0,count=TopNewsPerPage)
+def get_top_news(start=0,count=TopNewsPerPage,num_featured=0)
+    adj_count = count + num_featured
     numitems = $r.zcard("news.top")
-    news_ids = $r.zrevrange("news.top",start,start+(count-1))
-    result = get_news_by_id(news_ids,:update_rank => true)
+    news_ids = $r.zrevrange("news.top",start,start+(adj_count-1))
+    result = get_news_by_id(news_ids,:update_rank => true, :ignore_featured => true)
     # Sort by rank before returning, since we adjusted ranks during iteration.
-    return result.sort{|a,b| b["rank"].to_f <=> a["rank"].to_f},numitems
+    return result.first(count).sort{|a,b| b["rank"].to_f <=> a["rank"].to_f},numitems
 end
 
 # Get news in chronological order.
