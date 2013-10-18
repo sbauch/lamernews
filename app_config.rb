@@ -1,7 +1,7 @@
 # General
 SiteName = "NickLinks"
 SiteUrl = "http://nicklinks.com"
-SiteDescription = "&ldquo;The gateway site to deeper business and marketing content&rdquo;"
+SiteDescription = "The gateway site to deeper business and marketing content"
 
 # Redis config
 
