@@ -1,16 +1,16 @@
 # General
 SiteName = "NickLinks"
 SiteUrl = "http://nicklinks.com"
-SiteDescription = "The gateway to marketing. Get hooked."
+SiteDescription = "&ldquo;The gateway site to deeper business and marketing content&rdquo;"
 
 # Redis config
 
 ## Production
-#RedisURL =  'redis://ip-10-159-86-26.ec2.internal:6379'
+RedisURL =  'redis://ip-10-159-86-26.ec2.internal:6379'
 #RedisPass = ''
 
 ## Local 
-RedisURL =  "redis://localhost:6379"
+#RedisURL =  "redis://localhost:6379"
 #RedisPass = ''
 
 # Security
@@ -46,7 +46,7 @@ UsernameRegexp = /^[a-zA-Z][a-zA-Z0-9_\-]+$/
 
 # News and ranking
 NewsAgePadding = 3600*8
-TopNewsPerPage = 3
+TopNewsPerPage = 35
 LatestNewsPerPage = 30
 NewsEditTime = 60*15
 NewsScoreLogStart = 10

@@ -146,7 +146,12 @@ class HTMLGen
             }+
             self.body {
                 self.div(:class => "container") {
-                    _header+H.div(:id => "content"){yield}+_footer
+                    _header+
+                    H.div(:id => 'slogan'){ 
+                        H.h3 { SiteDescription }
+                    }+
+                    H.div(:id => "content"){yield}+
+                    _footer
                 }
             }
         }
