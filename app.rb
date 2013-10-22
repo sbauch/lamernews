@@ -1419,23 +1419,17 @@ def get_news_by_id(news_ids,opt={})
         opt[:single] = true
         news_ids = [news_ids]
     end
+        
+    news = $r.pipelined {
+        news_ids.each{|nid|
+            $r.hgetall("news:#{nid}")
+        }
+    }
     
     if opt[:ignore_featured] == true
-        p 'ignoring'
-        news = $r.pipelined {
-            news_ids.each{|nid|
-                $r.hgetall("news:#{nid}")
-            }
-        }
         news = news.reject{|n| n['featured'] == "1"}
-    else    
-    
-        news = $r.pipelined {
-            news_ids.each{|nid|
-                $r.hgetall("news:#{nid}")
-            }
-        }
     end
+
     
     return [] if !news # Can happen only if news_ids is an empty array.
 
