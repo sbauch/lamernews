@@ -1139,8 +1139,8 @@ def application_header
     H.header {
         H.h1 {
             H.a(:href => "/") { 
-                "&ldquo;" + H.entities SiteName + "&rdquo;"
-            } + 
+                "&ldquo;" + H.entities(SiteName) + "&rdquo;" 
+            }  
         }+navbar+" "+rnavbar+" "+menu_mobile
     }
 end
@@ -1872,8 +1872,13 @@ def news_to_html(news)
                 end
             }+
             if $user and user_is_admin?($user)
-                " - "+H.a(:href => "/editnews/#{news_param}") { "edit" }+" - "+H.a(:href => "http://twitter.com/intent/tweet?url=#{SiteUrl}/news/#{news_param}&text="+H.urlencode(news["title"])+" - ") { "tweet" }
-            else "" end
+                " - "+H.a(:href => "/editnews/#{news_param}") { "edit" }+ \
+                " - "+H.a(:href => "#", :onclick => "popupwindow('http://twitter.com/intent/tweet?url=#{SiteUrl}/news/#{news_param}&text=#{H.urlencode(news["title"])} - ','Tweet', 626, 436);") {'tweet'} + \
+                " - "+H.a(:href => "#", :class => 'facebook-share', :onclick => "popupwindow('https://www.facebook.com/sharer/sharer.php?u=#{SiteUrl}/news/#{news_param}','Share on Facebook', 626, 436);") {"share"}
+            else 
+                " - "+H.a(:href => "#", :onclick => "popupwindow('http://twitter.com/intent/tweet?url=#{SiteUrl}/news/#{news_param}&text=#{H.urlencode(news["title"])} - ','Tweet', 626, 436);") {'tweet'} + \
+                " - "+H.a(:href => "#", :class => 'facebook-share', :onclick => "popupwindow('https://www.facebook.com/sharer/sharer.php?u=#{SiteUrl}/news/#{news_param}','Share on Facebook', 626, 436);") {"share"}
+            end
         }+
         if params and params[:debug] and $user and user_is_admin?($user)
             "id: "+news["id"].to_s+" "+

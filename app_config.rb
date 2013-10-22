@@ -6,11 +6,11 @@ SiteDescription = "The gateway site to deeper business and marketing content"
 # Redis config
 
 ## Production
-RedisURL =  'redis://ip-10-159-86-26.ec2.internal:6379'
+# RedisURL =  'redis://ip-10-159-86-26.ec2.internal:6379'
 #RedisPass = ''
 
 ## Local 
-#RedisURL =  "redis://localhost:6379"
+RedisURL =  "redis://localhost:6379"
 #RedisPass = ''
 
 # Security
