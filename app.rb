@@ -429,6 +429,11 @@ get "/news/:news_param" do
         top_comment = ""
     end
     H.set_title "#{news["title"]} - #{SiteName}"
+    H.head {
+                H.meta(:property => "og:title", :content => news['title']) + \
+                H.meta(:property => "og:img", :content => news['image']) + \
+                H.meta(:property => "og:description", :content => "The gateway site to deeper business and marketing content")
+            }+    
     H.page {
         H.section(:id => "newslist") {
             news_to_html(news)

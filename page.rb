@@ -128,6 +128,7 @@ class HTMLGen
                 self.meta(:charset => "utf-8")+
                 self.title{H.entities @title}+
                 self.meta(:content => :index, :name => :robots)+
+                self.meta(:property => "og:description", :content => "The gateway site to deeper business and marketing content")+
                 self.meta(:content => "width=device-width, initial-scale=1, maximum-scale=1", :name => :viewport)+
                 self.link(:href => "/css/style.css?v=10", :rel => "stylesheet",
                           :type => "text/css")+
