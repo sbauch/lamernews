@@ -1138,7 +1138,9 @@ def application_header
     menu_mobile = H.a(:href => "#", :id => "link-menu-mobile"){"<~>"}
     H.header {
         H.h1 {
-            H.a(:href => "/") {H.entities SiteName}
+            H.a(:href => "/") { 
+                "&ldquo;" + H.entities SiteName + "&rdquo;"
+            } + 
         }+navbar+" "+rnavbar+" "+menu_mobile
     }
 end
@@ -1270,7 +1272,7 @@ def create_user(username,password)
     if $r.exists("username.to.id:#{username.downcase}")
         return nil, "Username is already taken, please try a different one."
     end
-    if rate_limit_by_ip(3600*15,"create_user",request.ip)
+    if rate_limit_by_ip(60*1,"create_user",request.ip)
         return nil, "Please wait some time before creating a new user."
     end
     id = $r.incr("users.count")
